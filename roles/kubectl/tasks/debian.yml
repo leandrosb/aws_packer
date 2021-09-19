@@ -1,0 +1,41 @@
+---
+- name: módulos do kernel GNU/Linux
+  shell: echo "{{ item }}" >> /etc/modules-load.d/k8s.conf
+  with_list:  
+    - br_netfilter
+    - ip_vs
+    - ip_vs_rr
+    - ip_vs_sh
+    - ip_vs_wrr
+    - nf_conntrack_ipv4
+
+- name: "instalando requisitos k8S"
+  apt:
+    pkg:
+    - apt-transport-https 
+    - gnupg2
+
+- apt_key:
+    url: "https://packages.cloud.google.com/apt/doc/apt-key.gpg"
+    state: present
+
+- name: Adicionando repositorio Kubernetes 
+  apt_repository:
+    repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+    state: present
+    filename: kubernetes
+
+- name: "update"
+  apt:
+    update_cache: yes 
+    force_apt_get: yes
+
+- name: "instalando requisitos kubelet kubeadm kubectl"
+  apt:
+    pkg:
+    - kubelet 
+    - kubeadm 
+    - kubectl
+
+- name: desativando swap
+  shell: swapoff -a

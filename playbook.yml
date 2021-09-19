@@ -7,3 +7,7 @@
     - name: install Docker
       include_role:
         name: docker
+
+    - name: install K8s
+      include_role:
+        name: kubectl
