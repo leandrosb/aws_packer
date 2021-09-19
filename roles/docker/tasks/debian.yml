@@ -1,0 +1,62 @@
+---
+- name: "instalando requisitos"
+  apt:
+    pkg:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - lsb-release
+    - open-iscsi
+    - nfs-common
+
+- name: "update "
+  apt:
+    name: "*"
+    state: latest
+
+- name: adicionando Docker GPG key
+  apt_key:
+    id: "{{ docker__apt_key_id }}"
+    url: "{{ docker__apt_key_url }}"
+    state: present
+
+- name: Configurando repositorio Docker
+  apt_repository:
+    repo: "{{ docker__apt_repository }}"
+    update_cache: true
+
+- name: Instalando Docker
+  apt:
+    name: "docker-{{ docker__edition }}"
+    state: "{{ docker__state }}"
+
+- name: Configure Docker daemon options (json)
+  copy:
+    dest:  /etc/docker/daemon.json 
+    content: | 
+        {
+          "exec-opts": ["native.cgroupdriver=systemd"],
+          "log-driver": "json-file",
+          "log-opts": {
+            "max-size": "100m"
+          },
+          "storage-driver": "overlay2"
+        }
+          
+- name: Criando configurando diretorios Docker
+  file:
+    path: "{{ item }}"
+    state: "directory"
+    owner: "root"
+    group: "root"
+    mode: "0755"
+  loop:
+    - "/etc/docker"
+    - "/etc/systemd/system/docker.service.d"
+
+- name: Systemd docker e reload daemon
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: docker
+
